@@ -1,7 +1,6 @@
 import re
 import os
 from functools import lru_cache
-from youtube_transcript_api import YouTubeTranscriptApi
 import requests
 from dotenv import load_dotenv
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -59,54 +58,61 @@ def load_groq():
 
 
 def get_transcript(video_id):
-    """Fetch the YouTube transcript directly."""
+    """Fetch YouTube transcript using FreeTranscriptAPI."""
+
+    api_key = os.getenv("FREETRANSCRIPT_API_KEY")
+
+    url = "https://api.freetranscriptapi.com/v1/transcript"
+
+    headers = {}
+
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
+
+    params = {
+        "video_url": f"https://www.youtube.com/watch?v={video_id}",
+        "lang": "en"
+    }
 
     try:
-        api = YouTubeTranscriptApi()
+        response = requests.get(
+            url,
+            params=params,
+            headers=headers,
+            timeout=60
+        )
 
-        transcript = api.fetch(video_id)
+        response.raise_for_status()
+
+        data = response.json()
+
+        transcript_data = data.get("transcript")
+
+        if not transcript_data:
+            raise Exception("No transcript found for this video.")
 
         text = " ".join(
-            item.text.strip()
-            for item in transcript
-            if item.text.strip()
+            item["text"].strip()
+            for item in transcript_data
+            if item.get("text")
         )
 
         if not text.strip():
-            raise ValueError(
-                "This video has no usable transcript."
-            )
+            raise Exception("Transcript is empty.")
 
         print("Transcript fetched successfully.")
         print("Transcript length:", len(text))
 
         return text
 
+    except requests.exceptions.Timeout:
+        raise Exception("FreeTranscriptAPI request timed out.")
+
+    except requests.exceptions.RequestException as e:
+        raise Exception(f"FreeTranscriptAPI request failed: {e}")
+
     except Exception as e:
-        print("Transcript error:", str(e))
-
-        raise Exception(
-            f"Unable to fetch transcript: {str(e)}"
-        )
-
-def create_chunks(text):
-    if not text:
-        raise ValueError("No transcript was retrieved.")
-
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=700,
-        chunk_overlap=150,
-        separators=["\n\n", "\n", ". ", "? ", "! ", ", ", " ", ""]
-    )
-
-    raw_chunks = splitter.split_text(text)
-
-    return [
-        {"id": index, "text": chunk.strip()}
-        for index, chunk in enumerate(raw_chunks)
-        if chunk.strip()
-    ]
-
+        raise Exception(f"Unable to fetch transcript: {e}")
 
 def tokenize(text):
     return re.findall(r"\b[\w'-]+\b", text.lower())
