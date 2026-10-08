@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube RAG Assistant</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+<div class="container">
+
+    <header>
+        <div class="logo">▶</div>
+        <div>
+            <h1>YouTube RAG Assistant</h1>
+            <p>Ask questions about any YouTube video</p>
+        </div>
+    </header>
+
+    <section class="card">
+       
+
+        <label for="youtube-url">YouTube URL</label>
+
+        <div class="url-box">
+            <input
+                type="text"
+                id="youtube-url"
+                placeholder="Paste YouTube video URL..."
+            >
+
+           
+        </div>
+
+        <p id="video-status" class="hint">
+            Paste a YouTube URL.
+        </p>
+    </section>
+
+    <section class="card">
+        <h2>💬 Ask a Question</h2>
+
+        <textarea
+            id="question"
+            placeholder="Ask anything about the video..."
+        ></textarea>
+
+        <button class="ask-btn" id="ask-btn" onclick="askQuestion()">
+            Ask Question
+        </button>
+    </section>
+
+    <div id="loading" class="loading hidden">
+        <div class="spinner"></div>
+        <p>Processing...</p>
+    </div>
+
+    <section class="card answer-card">
+        <h2>Answer</h2>
+
+        <div id="answer">
+            Your answer will appear here.
+        </div>
+    </section>
+
+   
+
+</div>
+
+<script src="/static/script.js"></script>
+</body>
+</html>
